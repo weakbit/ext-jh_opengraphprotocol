@@ -102,11 +102,10 @@ class OgRendererService implements \TYPO3\CMS\Core\SingletonInterface
         $fileRepository = GeneralUtility::makeInstance(FileRepository::class);
 
         $fileObjects = array();
+        // Get extension configuration
+        $extConf = isset($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['jh_opengraphprotocol']) ? GeneralUtility::removeDotsFromTS(unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['jh_opengraphprotocol'])) : array();
         if ($GLOBALS['TSFE']->page['_PAGES_OVERLAY_UID'])
         {
-            // Get extension configuration
-            $extConf = isset($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['jh_opengraphprotocol']) ? GeneralUtility::removeDotsFromTS(unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['jh_opengraphprotocol'])) : array();
-
             // Get images if there is a language overlay
             // This is somehow a hack, as l10n_mode 'mergeIfNotBlack' does not work in this case.
             // PageRepository->shouldFieldBeOverlaid does not work for config type 'inline' with "DEFAULT '0'" database config,
@@ -121,8 +120,9 @@ class OgRendererService implements \TYPO3\CMS\Core\SingletonInterface
                 $extConf['languageOverlay']['tx_jhopengraphprotocol_ogfalimages']['mergeIfNotBlank']) {
                 $fileObjects = $fileRepository->findByRelation('pages', 'tx_jhopengraphprotocol_ogfalimages', $GLOBALS['TSFE']->id);
             }
-        } else
+        } else {
             $fileObjects = $fileRepository->findByRelation('pages', 'tx_jhopengraphprotocol_ogfalimages', $GLOBALS['TSFE']->id);
+        }
 
         if (count($fileObjects) === 0)
         {
@@ -149,6 +149,14 @@ class OgRendererService implements \TYPO3\CMS\Core\SingletonInterface
         if (GeneralUtility::_GP('L'))
             $additionalParams['L'] = (int)GeneralUtility::_GP('L');
         unset($additionalParams['id']);
+
+        if (isset($extConf['tx_jhopengraphprotocol_ogdescription']['exclude'])) {
+            $exclude = array_flip(GeneralUtility::trimExplode(',', $extConf['tx_jhopengraphprotocol_ogdescription']['exclude']));
+            $additionalParams = array_filter($additionalParams, static function($value) use(&$exclude) {
+                return !isset($exclude[$value]);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
         $lConf = [
             'additionalParams' => '&' . GeneralUtility::implodeArrayForUrl('', $additionalParams),
             'forceAbsoluteUrl' => '1',

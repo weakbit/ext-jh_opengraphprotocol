@@ -9,3 +9,6 @@ languageOverlay.tx_jhopengraphprotocol_ogfalimages.mergeIfNotBlank = 0
 
 # cat=basic/enable/103; type=boolean; label=Description mergeIfNotBlank: Use description of default language if localized description is empty
 languageOverlay.tx_jhopengraphprotocol_ogdescription.mergeIfNotBlank = 0
+
+# cat=basic/104; type=string; label=Exclude those parameters for typolink
+tx_jhopengraphprotocol_ogdescription.exclude =
